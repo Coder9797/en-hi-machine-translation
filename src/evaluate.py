@@ -169,6 +169,7 @@ def evaluate(cfg: dict | None = None) -> dict:
     names = available_models()
     print("evaluating", names)
     if "transformer" in names:
+        print("evaluate transformer", flush=True)
         model, vocab, dev = _load_transformer(cfg)
         texts, per_sentence = _timed(
             lambda batch: _transformer_texts(model, vocab, dev, batch, cfg, None),
@@ -187,10 +188,12 @@ def evaluate(cfg: dict | None = None) -> dict:
         for probe, text in zip(probes, ethics):
             metrics["ethics"].append({**probe, "model": "transformer", "prediction": text})
         _free(model)
+        print("finished transformer", flush=True)
 
     from src.hf_experiment import generate_causal, generate_mt5, load_causal, load_mt5
 
     if "mt5" in names:
+        print("evaluate mt5", flush=True)
         model, tokenizer = load_mt5()
         texts, per_sentence = _timed(
             lambda batch: generate_mt5(model, tokenizer, batch, cfg, None, batch_size=1),
@@ -209,10 +212,12 @@ def evaluate(cfg: dict | None = None) -> dict:
         for probe, text in zip(probes, ethics):
             metrics["ethics"].append({**probe, "model": "mt5", "prediction": text})
         _free(model, tokenizer)
+        print("finished mt5", flush=True)
 
     for name in ("gemma", "llama"):
         if name not in names:
             continue
+        print(f"evaluate {name}", flush=True)
         model, tokenizer = load_causal(name)
         texts, per_sentence = _timed(
             lambda batch, model=model, tokenizer=tokenizer: generate_causal(model, tokenizer, batch, cfg, None, 1),
@@ -232,6 +237,7 @@ def evaluate(cfg: dict | None = None) -> dict:
         for probe, text in zip(probes, ethics):
             metrics["ethics"].append({**probe, "model": name, "prediction": text})
         _free(model, tokenizer)
+        print(f"finished {name}", flush=True)
 
     if (RESULTS_DIR / "llama_status.json").exists() and "llama" not in metrics["models"]:
         metrics["models"]["llama"] = json.loads((RESULTS_DIR / "llama_status.json").read_text(encoding="utf-8"))

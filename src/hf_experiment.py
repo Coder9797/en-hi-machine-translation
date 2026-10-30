@@ -372,8 +372,8 @@ def load_mt5():
 
     path = CHECKPOINT_DIR / "mt5"
     tokenizer = AutoTokenizer.from_pretrained(path)
-    dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-    model = AutoModelForSeq2SeqLM.from_pretrained(path, torch_dtype=dtype)
+    # The 250k-word output layer overflows in fp16. Train and score in fp32.
+    model = AutoModelForSeq2SeqLM.from_pretrained(path, torch_dtype=torch.float32)
     dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(dev)
     model.eval()
@@ -395,7 +395,10 @@ def load_causal(model_key: str):
 def generate_mt5(model, tokenizer, sentences: list[str], cfg: dict, temperature: float | None, batch_size: int = 8) -> list[str]:
     dev = _device_of(model)
     outputs = []
-    for start in range(0, len(sentences), batch_size):
+    total = len(sentences)
+    for start in range(0, total, batch_size):
+        if start % 100 < batch_size:
+            print(f"mt5 generate {start}/{total}", flush=True)
         chunk = sentences[start : start + batch_size]
         encoded = tokenizer(
             [cfg["mt5_prefix"] + sentence for sentence in chunk],
@@ -422,8 +425,11 @@ def generate_causal(model, tokenizer, sentences: list[str], cfg: dict, temperatu
     previous = tokenizer.padding_side
     tokenizer.padding_side = "left"
     outputs = []
+    total = len(sentences)
     try:
-        for start in range(0, len(sentences), batch_size):
+        for start in range(0, total, batch_size):
+            if start % 100 < batch_size:
+                print(f"causal generate {start}/{total}", flush=True)
             chunk = sentences[start : start + batch_size]
             messages = [[{"role": "user", "content": cfg["prompt"].format(sentence=sentence)}] for sentence in chunk]
             encoded = tokenizer.apply_chat_template(

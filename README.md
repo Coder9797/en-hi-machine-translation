@@ -1,6 +1,6 @@
 # English–Hindi machine translation
 
-Comparison of an encoder–decoder Transformer trained from scratch, fine-tuned mT5, and LoRA-adapted decoder-only models (Gemma now, LLaMA when access is granted) on the same English-to-Hindi test set.
+Comparison of an encoder–decoder Transformer trained from scratch, fine-tuned mT5, and LoRA-adapted Gemma and LLaMA on the same English-to-Hindi test set.
 
 ## Problem statement and objective
 
@@ -8,7 +8,7 @@ The task is to build four machine-translation systems for one language pair and 
 
 - **Basic Transformer:** encoder–decoder, trained from scratch.
 - **mT5:** encoder–decoder, fine-tuned.
-- **LLaMA:** decoder-only. The training code is included. Weights stay gated until the model authors approve access, so this model is not in the score table yet.
+- **LLaMA:** decoder-only, LoRA fine-tuned with the same recipe as Gemma.
 - **Gemma:** decoder-only, LoRA fine-tuned.
 
 The question is not only which system scores highest. It is how architecture, pretraining, tokenizer fertility, parameter count, and adaptation method show up in translation quality, training cost, and inference cost.
@@ -61,7 +61,7 @@ python -m src.pipeline
 
 Stages can be run on their own: `data`, `transformer`, `mt5`, `gemma`, `llama`, `evaluate`, `report`.
 
-Gemma is gated. Export `HF_TOKEN` for an account that has accepted the Gemma license before the Gemma stage. LLaMA uses the same variable. If LLaMA access is still pending, that stage records the status and the rest of the pipeline continues.
+Gemma and LLaMA are gated. Export `HF_TOKEN` for an account that has accepted both licenses. If a gated model is still pending, that stage records the status and the pipeline continues.
 
 The run that produced the numbers below used a free GPU notebook with internet enabled. `scripts/push_kaggle.py` submits that notebook from a machine that already has a Kaggle token in `~/.kaggle/access_token` and a Hugging Face token in the local Hugging Face login. The token files are not part of this repository.
 
@@ -88,7 +88,7 @@ Three comparisons are kept separate so a tiny from-scratch network is not treate
 
 1. **Pretraining, same family.** The basic Transformer and mT5 are both encoder–decoder. mT5 has already been pretrained on a large multilingual corpus. The from-scratch model has not. A higher mT5 score is evidence about pretraining and scale, not about the encoder–decoder layout by itself.
 2. **Encoder–decoder versus decoder-only after adaptation.** mT5 is fully fine-tuned. Gemma is adapted with LoRA on a much larger decoder-only model. Parameter count and Hindi tokens per sentence (fertility) are reported beside the scores because the tokenizers are not the same. mT5’s sentencepiece vocabulary covers Devanagari directly. A decoder-only model with a byte-heavy Hindi tokenization spends more of its context on script and less on words.
-3. **Matched decoder-only pair.** LLaMA uses the same prompt, the same LoRA rank, and the same number of training pairs as Gemma. That pair is the clean architecture-family comparison, and it is run only after LLaMA access is approved.
+3. **Matched decoder-only pair.** LLaMA uses the same prompt, the same LoRA rank, and the same number of training pairs as Gemma. That pair is the clean comparison inside the decoder-only family.
 
 chrF is the primary score because it is less harsh than BLEU on Hindi morphology. BLEU is the secondary score, computed by sacreBLEU with character tokenization so Devanagari is not forced through an English tokenizer. Both signatures are stored in `results/metrics.json`.
 
@@ -114,7 +114,7 @@ A high chrF does not certify that a system is fair or safe. The probe set is sma
 
 ## Conclusion
 
-The best completed model is the one named by the pre-registered rule in the results section: highest chrF, then BLEU, then fewer parameters. LLaMA is excluded until access is approved. After approval, `python -m src.pipeline --stages llama evaluate report` reruns that model on the frozen split and rebuilds this section.
+The best model is the one named by the pre-registered rule in the results section: highest chrF, then BLEU, then fewer parameters. The table is written by `python -m src.report` after every model has a score.
 
 ## Repository layout
 

@@ -44,10 +44,14 @@ def _hf_token() -> str:
     return token
 
 
-def build() -> Path:
+def build(stages: list[str] | None = None) -> Path:
     PRIVATE.mkdir(parents=True, exist_ok=True)
     username = _kaggle_username()
     encoded = base64.b64encode(_hf_token().encode()).decode()
+    command = ["python", "-m", "src.pipeline"]
+    if stages:
+        command.extend(["--stages", *stages])
+    command_literal = ", ".join(repr(part) for part in command)
     (PRIVATE / "train.py").write_text(
         textwrap.dedent(
             f"""
@@ -73,7 +77,7 @@ def build() -> Path:
                     "transformers>=4.44", "datasets", "pyyaml", "matplotlib", "pandas", "tqdm",
                 ]
             )
-            subprocess.check_call(["python", "-m", "src.pipeline"])
+            subprocess.check_call([{command_literal}])
             """
         ).lstrip(),
         encoding="utf-8",
@@ -97,8 +101,8 @@ def build() -> Path:
     return PRIVATE
 
 
-def push() -> None:
-    folder = build()
+def push(stages: list[str] | None = None) -> None:
+    folder = build(stages)
     token = Path.home().joinpath(".kaggle", "access_token").read_text(encoding="utf-8").strip()
     env = os.environ.copy()
     env["KAGGLE_API_TOKEN"] = token
@@ -119,4 +123,6 @@ def push() -> None:
 
 
 if __name__ == "__main__":
-    push()
+    import sys
+
+    push(sys.argv[1:] or None)
