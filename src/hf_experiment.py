@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import time
 from pathlib import Path
@@ -146,9 +147,9 @@ def _write_stats(name: str, seconds: float, total: int, trainable: int) -> None:
     path.write_text(json.dumps(stats, indent=2), encoding="utf-8")
 
 
-def _run_steps(model, batches, dev, optimizer, base_lr, warmup, clip, accum, quantized: bool) -> float:
+def _run_steps(model, batches, dev, optimizer, base_lr, warmup, clip, accum, quantized: bool, use_fp16: bool = True) -> float:
     model.train()
-    use_scaler = dev.type == "cuda" and not quantized
+    use_scaler = dev.type == "cuda" and use_fp16 and not quantized
     scaler = torch.amp.GradScaler("cuda", enabled=use_scaler)
     optimizer.zero_grad(set_to_none=True)
     total = 0.0
@@ -159,8 +160,10 @@ def _run_steps(model, batches, dev, optimizer, base_lr, warmup, clip, accum, qua
         for group in optimizer.param_groups:
             group["lr"] = base_lr * lr_scale
         batch = _move(batch, dev)
-        with torch.amp.autocast(device_type="cuda", dtype=torch.float16, enabled=dev.type == "cuda"):
+        with torch.amp.autocast(device_type="cuda", dtype=torch.float16, enabled=dev.type == "cuda" and use_fp16):
             loss = model(**batch).loss / accum
+        if not math.isfinite(float(loss.detach().float().item())):
+            raise RuntimeError("training loss became non-finite; refusing to keep a broken checkpoint")
         if use_scaler:
             scaler.scale(loss).backward()
         else:
@@ -223,6 +226,7 @@ def train_mt5(cfg: dict | None = None) -> dict:
         float(spec["clip"]),
         int(spec["grad_accum"]),
         quantized=False,
+        use_fp16=False,
     )
     elapsed = time.perf_counter() - started
     out = CHECKPOINT_DIR / "mt5"
