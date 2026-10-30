@@ -100,7 +100,20 @@ def push() -> None:
     token = Path.home().joinpath(".kaggle", "access_token").read_text(encoding="utf-8").strip()
     env = os.environ.copy()
     env["KAGGLE_API_TOKEN"] = token
-    subprocess.check_call(["kaggle", "kernels", "push", "-p", str(folder)], env=env)
+    subprocess.check_call(
+        [
+            "kaggle",
+            "kernels",
+            "push",
+            "-p",
+            str(folder),
+            "--accelerator",
+            "NvidiaTeslaT4",
+            "--timeout",
+            "43200",
+        ],
+        env=env,
+    )
 
 
 if __name__ == "__main__":
