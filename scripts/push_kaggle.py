@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import subprocess
@@ -46,16 +47,17 @@ def _hf_token() -> str:
 def build() -> Path:
     PRIVATE.mkdir(parents=True, exist_ok=True)
     username = _kaggle_username()
-    (PRIVATE / "hf_token.txt").write_text(_hf_token(), encoding="utf-8")
+    encoded = base64.b64encode(_hf_token().encode()).decode()
     (PRIVATE / "train.py").write_text(
         textwrap.dedent(
             f"""
+            import base64
             import os
             import shutil
             import subprocess
             from pathlib import Path
 
-            os.environ["HF_TOKEN"] = Path(__file__).with_name("hf_token.txt").read_text(encoding="utf-8").strip()
+            os.environ["HF_TOKEN"] = base64.b64decode("{encoded}").decode()
             os.environ["TOKENIZERS_PARALLELISM"] = "false"
             os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
             os.environ["PYTHONUNBUFFERED"] = "1"
