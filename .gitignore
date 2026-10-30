@@ -1,0 +1,36 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.ipynb_checkpoints/
+.DS_Store
+
+# Assignment brief and local submission files. The LMS cover sheet
+# contains identity details and must not be published.
+IA3_*.pdf
+private_submission/
+
+# Secrets and private compute wrappers
+kaggle_private/
+**/*token*
+**/*secret*
+
+# Data and weights stay out of git. Metrics, plots, and translations are kept.
+data/raw/
+checkpoints/
+*.pt
+*.bin
+*.safetensors
+*.spm
+*.model
+wandb/
+outputs/
+
+# Keep result tables and generated text
+!results/**
+!results/**/*.json
+!results/**/*.jsonl
+!results/**/*.md
+!results/**/*.png
+!results/**/*.csv
