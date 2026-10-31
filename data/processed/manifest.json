@@ -1,0 +1,17 @@
+{
+  "dataset_id": "cfilt/iitb-english-hindi",
+  "dataset_page": "https://www.cfilt.iitb.ac.in/iitb_parallel/",
+  "dataset_mirror": "https://huggingface.co/datasets/cfilt/iitb-english-hindi",
+  "license": "CC BY-NC 4.0",
+  "seed": 42,
+  "sizes": {
+    "train": 8000,
+    "validation": 1000,
+    "test": 1000
+  },
+  "filters": {
+    "max_words": 40,
+    "max_chars": 240,
+    "length_ratio": 4.0
+  }
+}

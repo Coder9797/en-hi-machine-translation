@@ -33,8 +33,8 @@ transformer:
 mt5:
   model_name: google/mt5-small
   epochs: 1
-  batch_size: 8
-  grad_accum: 2
+  batch_size: 4
+  grad_accum: 4
   lr: 0.0001
   warmup_steps: 50
   clip: 1.0
