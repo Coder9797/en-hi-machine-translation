@@ -191,3 +191,7 @@ def report() -> None:
     write_plots(metrics)
     splice_readme(tables)
     print("updated README results and plots")
+
+
+if __name__ == "__main__":
+    report()

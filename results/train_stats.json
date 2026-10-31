@@ -1,0 +1,17 @@
+{
+  "mt5": {
+    "train_seconds": 314.899392153,
+    "parameters": 300176768,
+    "trainable_parameters": 300176768
+  },
+  "gemma": {
+    "train_seconds": 3102.841102134,
+    "parameters": 2617536768,
+    "trainable_parameters": 3194880
+  },
+  "llama": {
+    "train_seconds": 1835.1687139409996,
+    "parameters": 1237518336,
+    "trainable_parameters": 1703936
+  }
+}
